@@ -11,6 +11,12 @@ int[,] matrix =
     {0, 0, 0, 0, 0, 0}
 };
 
-var dijkstra = new DijkstraAlgo();
-var results = dijkstra.Solve(matrix, 0);
-Console.WriteLine(string.Join(", ", results));
+//var dijkstra = new DijkstraAlgo();
+//var results = dijkstra.Solve(matrix, 0);
+//Console.WriteLine(string.Join(", ", results));
+
+string template = "Milka";
+string text = "vaKor loves Milkamilka MiLka ";
+var rabinKarp = new RabinKarpAlgo();
+int entries = rabinKarp.CountEntries(template, text);
+Console.WriteLine(entries);
