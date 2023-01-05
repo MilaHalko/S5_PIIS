@@ -1,26 +1,28 @@
 namespace Lab4;
 
-public class Prima
+public class PrimaAlgo
 {
+    public int Weight { get; private set; } = 0;
     private int[,] _matrix;
     private int matrixSize;
-    private int[,] _octoTree;
+    private int[,] _octTree;
     private bool[] _addedVertices;
 
     public int[,] Solve(int[,] matrix)
     {
         _matrix = matrix;
         matrixSize = matrix.GetLength(0);
-        _octoTree = new int[matrixSize, matrixSize];
+        _octTree = new int[matrixSize, matrixSize];
         _addedVertices = new bool[matrixSize];
 
         for (int i = 0; i < matrixSize - 1; i++)
         {
             var edge = GetMinEdge(_addedVertices);
             SetEdge(edge);
+            Weight += edge.weight;
         }
 
-        return _octoTree;
+        return _octTree;
     }
 
     private (int ver1, int ver2, int weight) GetMinEdge(bool[] vertices)
@@ -48,8 +50,7 @@ public class Prima
     {
         _addedVertices[edge.ver1] = true;
         _addedVertices[edge.ver2] = true;
-        _octoTree[edge.ver1, edge.ver2] = edge.weight;
-        _octoTree[edge.ver2, edge.ver1] = edge.weight;
-        Console.WriteLine($"Edge: {edge.ver1}-{edge.ver2}  |  Weight: {edge.weight}");
+        _octTree[edge.ver1, edge.ver2] = edge.weight;
+        _octTree[edge.ver2, edge.ver1] = edge.weight;
     }
 }
