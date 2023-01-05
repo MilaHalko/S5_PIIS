@@ -5,6 +5,7 @@ public class PacmanGame
 {
     private State _state;
     private IMiniMax minimax;
+    private bool _gameFinished;
 
     public PacmanGame(Cell pacman, Cell enemy, Cell destination)
     {
@@ -13,7 +14,15 @@ public class PacmanGame
 
     public void Start()
     {
+        while (!_gameFinished)
+        {
+            Iterate();
+        }
+    }
+
+    private void Iterate()
+    {
+        // foreach(var e in players) e.MakeTurn
         _state.FieldOutput();
-        
     }
 }
