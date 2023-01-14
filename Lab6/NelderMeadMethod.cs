@@ -2,105 +2,149 @@ namespace Lab6;
 
 public class NelderMeadMethod
 {
-    private const int Alpha = 1;
-    private const int GammaLowerBound = 2;
-    private const int GammaUpperBound = 3;
-    private const double BetaLowerBound = 0.4;
-    private const double BetaUpperBound = 0.6;
-    private const int N = 3;
+    private const double alpha = 1;
+    private const double beta = 0.5;
+    private const double gamma = 2.5;
+    private const double delta = 0.5;
 
-    public static double ObjectiveFunction(IList<double> point)
-        => -5 * point[0] * Math.Pow(point[1], 2) * point[2]
-           + 2 * Math.Pow(point[0], 2) * point[1]
-           - 3 * point[0] * Math.Pow(point[1], 4)
-           + point[0] * Math.Pow(point[2], 2);
+    private Matrix _simplexTable;
 
-    public static void Run(Vector<double> startingPoint, double distanceBetweenTwoPoints, double precision, int iterationsNumber)
+    public Matrix SimplexTable => _simplexTable;
+
+    public NelderMeadMethod(double[] initialVector, double distanceBetweenTwoPoints)
     {
-        var simplex = Matrix<double>.Build.Dense(N + 1, N);
-        simplex.SetRow(0, startingPoint);
-        simplex.MapIndexedInplace(
-            (i, j, value) => i == 0 
-                ? value 
-                : simplex[0, j] + (j == i - 1 
-                    ? D1(distanceBetweenTwoPoints) 
-                    : D2(distanceBetweenTwoPoints)), 
-            Zeros.Include);
-        for (var i = 0; i < iterationsNumber; i++)
+        CreateSimplexTable(initialVector, distanceBetweenTwoPoints);
+    }
+
+    public void Solve(int iterations, double precision, Func<double[], double> targetFunction)
+    {
+        double[] functionValues = new double[_simplexTable.M];
+        int[] indexes = new int[_simplexTable.M];
+        for (int i = 0; i < iterations; i++)
         {
-            if (!ConsolePrinter.PrintAlgorithmResult(simplex, i))
+            for (int row = 0; row < functionValues.Length; row++)
+            {
+                functionValues[row] = targetFunction(_simplexTable.GetRow(row));
+                indexes[row] = row;
+            }
+
+            Array.Sort(functionValues, indexes);
+
+            double maxFunctionValue = functionValues[^1];
+            double secMaxFunctionValue = functionValues[^2];
+            double minFunctionValue = functionValues[0];
+
+            if (!double.IsFinite(maxFunctionValue) || !double.IsFinite(minFunctionValue))
             {
                 return;
             }
-            var functionValues =
-                simplex.EnumerateRows()
-                    .Select(ObjectiveFunction).ToList();
-                var ordererFunctionValues = functionValues.OrderBy(f => f).ToList();
 
-            var worstFunctionValue = ordererFunctionValues[^1];
-            var secondWorstFunctionValue = ordererFunctionValues[^2];
-            var bestFunctionValue = functionValues[0];
-            var indexOfWorst = functionValues.IndexOf(worstFunctionValue);
-            var indexOfBest = functionValues.IndexOf(bestFunctionValue);
+            int indexOfMax = indexes[^1];
+            int indexOfMin = indexes[0];
 
-            var centerOfGravity = (simplex.ReduceRows((row1, row2) => row1 + row2) - simplex.Row(indexOfWorst)) / N;
+            double[] maxRow = _simplexTable.GetRow(indexOfMax);
+
+            double[] centroid = new double[_simplexTable.N];
+            for (int row = 0; row < _simplexTable.M; row++)
+            {
+                if (row == indexOfMax)
+                    continue;
+
+                centroid.AddRow(_simplexTable, row);
+            }
+
+            centroid.Divide(_simplexTable.N);
 
             if (Math.Sqrt(functionValues
-                    .Select(functionValue => Math.Pow(functionValue - ObjectiveFunction(centerOfGravity), 2))
-                    .Sum() / (N + 1) ) <= precision) 
+                    .Select(functionValue => Math.Pow(functionValue - targetFunction(centroid), 2))
+                    .Sum() / (_simplexTable.M)) <= precision)
             {
                 break;
             }
 
-            var reflectedPoint = centerOfGravity + Alpha * (centerOfGravity - simplex.Row(indexOfWorst));
-            if (ObjectiveFunction(reflectedPoint) <= secondWorstFunctionValue &&
-                ObjectiveFunction(reflectedPoint) >= bestFunctionValue)
+            double[] reflectedPoint = new double[_simplexTable.N];
+            for (int row = 0; row < reflectedPoint.Length; row++)
             {
-                simplex.SetRow(indexOfWorst, reflectedPoint);
-                continue;
+                reflectedPoint[row] = centroid[row] + alpha * (centroid[row] - maxRow[row]);
             }
-            if (ObjectiveFunction(reflectedPoint) <= bestFunctionValue)
+
+            double reflectedFunctionValue = targetFunction(reflectedPoint);
+            if (reflectedFunctionValue < secMaxFunctionValue &&
+                reflectedFunctionValue >= minFunctionValue)
             {
-                var expandedPoint = centerOfGravity + (GammaUpperBound + GammaLowerBound) / 2.0 * (reflectedPoint - centerOfGravity);
-                simplex.SetRow(indexOfWorst,
-                    ObjectiveFunction(expandedPoint) <= bestFunctionValue ? expandedPoint : reflectedPoint);
+                _simplexTable.SetRow(indexOfMax, reflectedPoint);
                 continue;
             }
 
-            if (ObjectiveFunction(reflectedPoint) <= worstFunctionValue)
+            if (reflectedFunctionValue < minFunctionValue)
             {
-                var contractedPoint =
-                    centerOfGravity + (BetaUpperBound + BetaLowerBound) / 2 * (reflectedPoint - centerOfGravity);
-                if (ObjectiveFunction(contractedPoint) <= ObjectiveFunction(reflectedPoint))
+                double[] expandedPoint = new double[_simplexTable.N];
+                for (int row = 0; row < expandedPoint.Length; row++)
                 {
-                    simplex.SetRow(indexOfWorst, contractedPoint);
-                    continue;
+                    expandedPoint[row] = centroid[row] + gamma * (reflectedPoint[row] - centroid[row]);
                 }
-            }
-            else
-            {
-                var contractedPoint =
-                    centerOfGravity + (BetaUpperBound + BetaLowerBound) / 2 * (simplex.Row(indexOfWorst) - centerOfGravity);
-                if (ObjectiveFunction(contractedPoint) <= worstFunctionValue)
-                {
-                    simplex.SetRow(indexOfWorst, contractedPoint);
-                    continue;
-                }
-            }
-            var bestRow = simplex.Row(indexOfBest);
-            for (var j = 0; j < simplex.RowCount; j++)
-            {
-                if (j == indexOfBest) continue;
 
-                var currentRow = simplex.Row(j);
-                simplex.SetRow(j, bestRow + 0.5 * (currentRow - bestRow));
+                _simplexTable.SetRow(indexOfMax,
+                    targetFunction(expandedPoint) <= reflectedFunctionValue ? expandedPoint : reflectedPoint);
+                continue;
+            }
+
+            double[] contractedPoint = new double[_simplexTable.N];
+            if (reflectedFunctionValue >= secMaxFunctionValue)
+            {
+                for (int row = 0; row < contractedPoint.Length; row++)
+                {
+                    contractedPoint[row] = centroid[row] + beta * (reflectedPoint[row] - centroid[row]);
+                }
+
+                if (targetFunction(contractedPoint) <= maxFunctionValue)
+                {
+                    _simplexTable.SetRow(indexOfMax, contractedPoint);
+                    continue;
+                }
+            }
+
+            var minRow = _simplexTable.GetRow(indexOfMin);
+            for (var j = 0; j < _simplexTable.M; j++)
+            {
+                if (j == indexOfMin) continue;
+
+                var currentRow = _simplexTable.GetRow(j);
+                for (int k = 0; k < currentRow.Length; k++)
+                {
+                    currentRow[k] = minRow[k] + delta * (currentRow[k] - minRow[k]);
+                }
+
+                _simplexTable.SetRow(j, currentRow);
             }
         }
     }
 
-    private static double D1(double distanceBetweenTwoPoints)
-        => distanceBetweenTwoPoints / (N * Math.Sqrt(2)) * (Math.Sqrt(N + 1) + N - 1);
+    private void CreateSimplexTable(double[] initialVector, double distanceBetweenTwoPoints)
+    {
+        _simplexTable = new Matrix(initialVector.Length + 1, initialVector.Length);
+        int N = _simplexTable.N;
+        for (int i = 0; i < N; i++)
+        {
+            _simplexTable[0, i] = initialVector[i];
+        }
 
-    private static double D2(double distanceBetweenTwoPoints)
-        => distanceBetweenTwoPoints / (N * Math.Sqrt(2)) * (Math.Sqrt(N + 1) - 1);
+        for (int i = 1; i < _simplexTable.M; i++)
+        {
+            for (int j = 0; j < N; j++)
+            {
+                _simplexTable[i, j] = _simplexTable[0, j] + (j == i - 1 ? D1() : D2());
+            }
+        }
+
+        double D1()
+        {
+            return distanceBetweenTwoPoints / (N * Math.Sqrt(2)) * (Math.Sqrt(N + 1) + N - 1);
+        }
+
+        double D2()
+        {
+            return distanceBetweenTwoPoints / (N * Math.Sqrt(2)) * (Math.Sqrt(N + 1) - 1);
+        }
+    }
 }
