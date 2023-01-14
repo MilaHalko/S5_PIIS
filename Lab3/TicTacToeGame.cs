@@ -4,15 +4,13 @@ public class TicTacToeGame
 {
     private Field _field;
     private bool _playerTurn;
-    private Cell _player;
     private INegaMax _negaMax;
 
     public TicTacToeGame(bool playerTurn, INegaMax negaMax)
     {
         _playerTurn = playerTurn;
-        _player = _playerTurn ? Cell.X : Cell.O;
         _negaMax = negaMax;
-        _field = new Field();
+        _field = new Field(_playerTurn ? Cell.X : Cell.O);
     }
 
     public void Play()
@@ -54,7 +52,7 @@ public class TicTacToeGame
             j = InputValidate();
         } while (_field[i, j] != Cell.Empty);
         
-        _field[i, j] = _player;
+        _field[i, j] = _field.Player;
     }
 
     private static int InputValidate()

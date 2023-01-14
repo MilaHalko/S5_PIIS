@@ -15,6 +15,13 @@ public class Field
         set => _field[i, j] = value;
     }
 
+    public Field(Cell player)
+    {
+        _player = player;
+    }
+
+    public Cell Player => _player;
+    private Cell _player;
     private Cell[,] _field = new Cell[3, 3];
 
     public bool GameFinished(out Cell winner)
@@ -60,5 +67,33 @@ public class Field
         }
 
         return true;
+    }
+
+    public int GetScore(int depth)
+    {
+        if (!GameFinished(out Cell winner) || winner == Cell.Empty)
+        {
+            return 0;
+        }
+
+        return winner == _player ? -500 * depth : 500 * depth;
+    }
+
+    public IEnumerable<Field> GetAdjacents(Cell player)
+    {
+        var newStates = new List<Field>();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (_field[i, j] == Cell.Empty)
+                {
+                    var state = _field.Clone() as Field;
+                    state[i, j] = player;
+                    newStates.Add(state);
+                }
+            }
+            
+        }
     }
 }
