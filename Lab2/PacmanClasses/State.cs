@@ -1,24 +1,33 @@
+using System.Text;
+using Pacman.PathAlgos;
+
 namespace Pacman.PacmanClasses;
 
 public class State
 {
-    private Field _field;
-    private Cell _pacman;
-    private Cell _enemy;
-    private Cell _destination;
+    public Field Field;
+    public Cell Pacman;
+    public Cell Enemy;
+    public Cell Destination;
+    private IPathSearch _searchAlgo;
 
     public State(Field field, Cell pacman, Cell enemy, Cell destination)
     {
-        _field = field;
-        _pacman = pacman;
-        _enemy = enemy;
-        _destination = destination;
+        Field = field;
+        Pacman = pacman;
+        Enemy = enemy;
+        Destination = destination;
+        _searchAlgo = new AStar();
     }
 
-    // TODO: Score get by path finding 
-    public int GetScore() => 1;
-    public IEnumerable<State> GetAdjacents()
+    public bool IsTerminal => Pacman == Destination || Enemy == Pacman;
+    
+    public int GetScore() => _searchAlgo.FindPath(Field, Pacman, Destination)
+                             - _searchAlgo.FindPath(Field, Enemy, Pacman) * 10;
+
+    public IEnumerable<State> GetAdjacents(bool isPacman)
     {
+        Cell curr = isPacman ? Pacman : Enemy;
         List<State> states = new List<State>();
         for (int i = -1; i <= 1; i++)
         {
@@ -26,59 +35,54 @@ public class State
             {
                 if (i == 0 || j == 0)
                 {
-                    Cell adj = new Cell(_pacman.X + i, _pacman.Y + j);
-                    if (ValidCell(adj))
+                    Cell adj = new Cell(curr.X + i, curr.Y + j);
+                    if (Field.CellIsValid(adj))
                     {
-                        states.Add(new State(_field, adj, _enemy, _destination));
+                        if (isPacman)
+                        {
+                            states.Add(new State(Field, adj, Enemy, Destination));    
+                        }
+                        else
+                        {
+                            states.Add(new State(Field, Pacman, adj, Destination));
+                        }
                     }
                 }
             }
         }
+
         return states;
     }
-    
-    public bool EnemyWon() => _pacman.SameCell(_enemy);
-    private bool ValidCell(Cell cell) => cell.X >= 0 && cell.Y >= 0 && 
-                                         cell.X < _field.Height && cell.Y < _field.Width && 
-                                         _field[cell] != 0;
 
-    public void FieldOutput()
+    public override string ToString()
     {
-        string[,] stringMaze = new string[_field.Height, _field.Width];
-            for (int i = 0; i < _field.Height; i++)
+        StringBuilder sb = new StringBuilder();
+        string[,] stringMaze = new string[Field.Height, Field.Width];
+        for (int i = 0; i < Field.Height; i++)
+        {
+            for (int j = 0; j < Field.Width; j++)
             {
-                for (int j = 0; j < _field.Width; j++)
-                {
-                    switch (_field[i, j])
-                    {
-                        case 0:
-                            stringMaze[i, j] = "🟪";
-                            break;
-                        case 1:
-                            stringMaze[i, j] = "⬛️";
-                            break;
-                        case 3:
-                            stringMaze[i, j] = "😇";
-                            break;
-                        case 6:
-                            stringMaze[i, j] = "👿";
-                            break;
-                        case 9:
-                            stringMaze[i, j] = "🟥";
-                            break;
-                    }
-                }
+                stringMaze[i, j] = Field[i, j] == 0 ? "🟪" : "  ";
             }
-            Console.WriteLine("🟪🟪🟪🟪🟪🟪🟪🟪🟪");
-            for (int i = 0; i < _field.Height; i++)
-            {
-                Console.Write("🟪");
-                for (int j = 0; j < _field.Width; j++)
-                {
-                    Console.Write(stringMaze[i, j]);
-                }
-                Console.WriteLine("🟪");
-            }
-            Console.WriteLine("🟪🟪🟪🟪🟪🟪🟪🟪🟪");
         }
+
+        stringMaze[Pacman.X, Pacman.Y] = "😇";
+        stringMaze[Enemy.X, Enemy.Y] = "👿";
+        stringMaze[Destination.X, Destination.Y] = "🟥";
+
+        sb.AppendLine("🟪🟪🟪🟪🟪🟪🟪🟪🟪");
+        for (int i = 0; i < Field.Height; i++)
+        {
+            sb.Append("🟪");
+            for (int j = 0; j < Field.Width; j++)
+            {
+                sb.Append(stringMaze[i, j]);
+            }
+
+            sb.AppendLine("🟪");
+        }
+
+        sb.AppendLine("🟪🟪🟪🟪🟪🟪🟪🟪🟪");
+        return sb.ToString();
     }
+}

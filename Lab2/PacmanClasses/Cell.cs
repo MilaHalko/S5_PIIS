@@ -2,20 +2,40 @@ namespace Pacman.PacmanClasses;
 
 public class Cell
 {
-    public int X { get; set; }  // as I
-    public int Y { get; set; }  // as J
+    
+    /// <summary>
+    /// I index
+    /// </summary>
+    public int X { get; set; }
+    
+    /// <summary>
+    /// J index
+    /// </summary>
+    public int Y { get; set; }
 
-    public Cell()
-    {
-    }
+    public Cell(Cell old) : this(old.X, old.Y) {}
     public Cell(int x, int y)
     {
         X = x;
         Y = y;
     }
-
-    public bool SameCell(Cell cell)
+    private bool Equals(Cell other)
     {
-        return X == cell.X && Y == cell.Y;
+        return X == other.X && Y == other.Y;
+    }
+
+    public static bool operator ==(Cell left, Cell right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Cell left, Cell right)
+    {
+        return !left.Equals(right);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
     }
 }

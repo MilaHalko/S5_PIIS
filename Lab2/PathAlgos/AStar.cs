@@ -1,49 +1,61 @@
 using Pacman.PacmanClasses;
-using Pacman.PathAlgoClasses;
-namespace Pacman.PathAlgos;
+using Pacman.PathAlgos;
 
 public class AStar : IPathSearch
 {
-    private int[] _rowNum = { -1, 0, 0, 1 };
-    private int[] _colNum = { 0, -1, 1, 0 };
-    public int FindPath(Field field, Cell start, Cell end, out List<Cell> path)
+    private readonly int[] _rowNum = { -1, 0, 0, 1 };
+    private readonly int[] _colNum = { 0, -1, 1, 0 };
+
+    public int FindPath(Field maze, Cell startPoint, Cell destPoint)
     {
-        path = null;
-        if (field[start] == 0 || field[end] == 0)
+        if (maze[startPoint] != 1 || maze[destPoint] != 1)
         {
             return -1;
         }
 
-        bool[,] visitedNodes = new bool[field.Height, field.Width];
-        visitedNodes[start.X, start.Y] = true;
+        bool[,] visitedNodes = new bool[maze.Height, maze.Width];
+        visitedNodes[startPoint.X, startPoint.Y] = true;
 
         PriorityQueue<PathSearchNode, int> queue = new();
-        PathSearchNode currentNode = new PathSearchNode(start, 0, null);
-        return 1;
-    }
-    
-    private Cell[] ReconstructPath()
-    {
-        
-    }
-}
+        PathSearchNode startPathSearchNode = new PathSearchNode(startPoint, 0);
+        queue.Enqueue(startPathSearchNode, GetHeuristic(startPathSearchNode, destPoint));
 
-class PathNode
-{
-    public PathNode parent { get; }
-    public Cell cell { get; }
-    public int g { get; }
-    public int h { get; }
+        while (queue.Count != 0)
+        {
+            PathSearchNode current = queue.Dequeue();
+            Cell cell = current.Cell;
 
-    public PathNode(Cell cell, PathNode parent, int distance, int heuristic = 1)
-    {
-        this.cell = cell;
-        this.parent = parent;
-        g = distance;
-        h = heuristic;
+            if (cell.X == destPoint.X && cell.Y == destPoint.Y)
+            {
+                return current.Distance;
+            }
+
+            AddAdjToQueue(queue, current, maze, destPoint, visitedNodes);
+        }
+
+        return -1;
     }
-    public int GetF()
+
+    private void AddAdjToQueue(PriorityQueue<PathSearchNode, int> nodeQueue, PathSearchNode current, Field maze,
+        Cell destPoint, bool[,] visitedNodes)
     {
-        return g + h;
+        for (int i = 0; i < 4; i++)
+        {
+            Cell adjCell = new Cell(current.Cell.X + _rowNum[i], current.Cell.Y + _colNum[i]);
+            
+            if (maze.CellIsValid(adjCell) && maze[adjCell] == 1 &&
+                !visitedNodes[adjCell.X, adjCell.Y])
+            {
+                visitedNodes[adjCell.X, adjCell.Y] = true;
+
+                PathSearchNode adjPathSearchNode = new PathSearchNode(adjCell, current.Distance + 1);
+                nodeQueue.Enqueue(adjPathSearchNode, GetHeuristic(adjPathSearchNode, destPoint));
+            }
+        }
+    }
+
+    private int GetHeuristic(PathSearchNode current, Cell destPoint)
+    {
+        return current.Distance + Math.Abs(destPoint.X - current.Cell.X) + Math.Abs(destPoint.Y - current.Cell.Y);
     }
 }
