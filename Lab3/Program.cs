@@ -1,4 +1,4 @@
 ﻿
 using Lab3;
 
-new TicTacToeGame(true,new NegaScout()).Play();
+new TicTacToeGame(true,new NegaMaxStandard()).Play();

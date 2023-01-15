@@ -106,7 +106,6 @@ public class Field : ICloneable
                     newStates.Add(state);
                 }
             }
-            
         }
 
         return newStates;
@@ -114,23 +113,46 @@ public class Field : ICloneable
 
     public override string ToString()
     {
-        StringBuilder stringBuilder = new StringBuilder();
+        var sb = new StringBuilder();
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                stringBuilder.Append(_field[i, j] == Cell.Empty ? "-" : _field[i, j].ToString());
-            }
+                if (_field[i, j] == Cell.Empty)
+                {
+                    sb.Append("    ");
+                }
+                else if (_field[i, j] == Cell.X)
+                {
+                    sb.Append(" ❌  ");
+                }
+                else
+                {
+                    sb.Append(" ⭕  ");
+                }
 
-            stringBuilder.AppendLine();
+                if (j == 0 || j == 1)
+                {
+                    sb.Append("│");
+                }
+            }
+            sb.AppendLine();
+            if (i == 0 || i == 1)
+            {
+                sb.AppendLine("────┼────┼────");
+            }
+            else
+            {
+                sb.AppendLine();
+            }
         }
-        return stringBuilder.ToString();
+
+        return sb.ToString();
     }
 
     public object Clone()
     {
         Field cloned = new Field(_field.Clone() as Cell[,], _player, _computer);
         return cloned;
-        
     }
 }
