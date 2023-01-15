@@ -2,18 +2,18 @@
 
 var initial = new double[] { 2, 1, 2 };
 var nelderMead = new NelderMead(initial, 1);
-Console.WriteLine($"Initial simplex matrix:\n{nelderMead.SimplexTable}");
+Console.WriteLine($"Initial:\n{nelderMead.SimplexTable}");
 double[] functionValues = new double[nelderMead.SimplexTable.Height];
 
 UpdateFunctionValues();
 
-Console.WriteLine($"Current min value: {functionValues[0]}\n");
+Console.WriteLine($"Current min: {functionValues[0]}\n");
 nelderMead.Apply(TargetFunction, 300, 0.01);
-Console.WriteLine($"Final simplex matrix:\n{nelderMead.SimplexTable}");
+Console.WriteLine($"Final:\n{nelderMead.SimplexTable}");
 
 UpdateFunctionValues();
 
-Console.WriteLine("Final min value:" + functionValues[0]);
+Console.WriteLine("Final min:" + functionValues[0]);
 
 void UpdateFunctionValues()
 {
