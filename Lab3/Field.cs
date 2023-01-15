@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Lab3;
 
 public enum Cell
@@ -7,7 +9,7 @@ public enum Cell
     O
 };
 
-public class Field
+public class Field : ICloneable
 {
     public Cell this[int i, int j]
     {
@@ -18,11 +20,22 @@ public class Field
     public Field(Cell player)
     {
         _player = player;
+        _computer = player == Cell.X ? Cell.O : Cell.X;
+        _field = new Cell[3, 3];
     }
+
+    public Field(Cell[,] field, Cell player, Cell computer)
+    {
+        _field = field;
+        _player = player;
+        _computer = computer;
+    }
+
 
     public Cell Player => _player;
     private Cell _player;
-    private Cell[,] _field = new Cell[3, 3];
+    private Cell _computer;
+    private Cell[,] _field;
 
     public bool GameFinished(out Cell winner)
     {
@@ -76,10 +89,10 @@ public class Field
             return 0;
         }
 
-        return winner == _player ? -500 * depth : 500 * depth;
+        return winner == _player ? -500 / depth : 500 / depth;
     }
 
-    public IEnumerable<Field> GetAdjacents(Cell player)
+    public List<Field> GetAdjacents(bool computerMove)
     {
         var newStates = new List<Field>();
         for (int i = 0; i < 3; i++)
@@ -88,12 +101,36 @@ public class Field
             {
                 if (_field[i, j] == Cell.Empty)
                 {
-                    var state = _field.Clone() as Field;
-                    state[i, j] = player;
+                    var state = Clone() as Field;
+                    state[i, j] = computerMove ? _computer : _player;
                     newStates.Add(state);
                 }
             }
             
         }
+
+        return newStates;
+    }
+
+    public override string ToString()
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                stringBuilder.Append(_field[i, j] == Cell.Empty ? "-" : _field[i, j].ToString());
+            }
+
+            stringBuilder.AppendLine();
+        }
+        return stringBuilder.ToString();
+    }
+
+    public object Clone()
+    {
+        Field cloned = new Field(_field.Clone() as Cell[,], _player, _computer);
+        return cloned;
+        
     }
 }

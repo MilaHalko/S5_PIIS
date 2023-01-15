@@ -35,12 +35,11 @@ public class TicTacToeGame
 
     private void ComputerMove()
     {
-        
+        _field = _negaMax.GetBestMove(_field);
     }
 
     private void PlayerMove()
     {
-
         int i;
         int j;
         do
@@ -62,6 +61,6 @@ public class TicTacToeGame
         {
         }
 
-        return i;
+        return i -1;
     }
 }
