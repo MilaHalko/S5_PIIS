@@ -44,13 +44,17 @@ public class Field : ICloneable
             // Check rows and columns
             if ((_field[i, 0] == _field[i, 1]
                  && _field[i, 1] == _field[i, 2]
-                 && _field[i, 0] != Cell.Empty)
-                ||
-                (_field[0, i] == _field[1, i]
+                 && _field[i, 0] != Cell.Empty))
+            {
+                winner = _field[i, 0];
+                return true;
+            }
+            
+            if ((_field[0, i] == _field[1, i]
                  && _field[1, i] == _field[2, i]
                  && _field[0, i] != Cell.Empty))
             {
-                winner = _field[i, 0];
+                winner = _field[0, i];
                 return true;
             }
         }
@@ -89,7 +93,7 @@ public class Field : ICloneable
             return 0;
         }
 
-        return winner == _player ? -500 / depth : 500 / depth;
+        return winner == _player ? 500 / depth : -500 / depth;
     }
 
     public List<Field> GetAdjacents(bool computerMove)

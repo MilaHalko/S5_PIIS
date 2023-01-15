@@ -27,7 +27,7 @@ public class NegaMaxStandard : INegaMax
         var bestScore = Int32.MinValue;
         foreach (var adj in adjacents)
         {
-            var adjScore = -1*Apply(adj, 1, -11);
+            var adjScore = -1*Apply(adj, 1, 1);
             if (bestScore < adjScore)
             {
                 bestScore = adjScore;

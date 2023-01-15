@@ -10,7 +10,7 @@ public class NegaMaxAlphaBetaPruning : INegaMax
         }
 
         int value = int.MinValue;
-        foreach (var adjacent in board.GetAdjacents(color == 1))
+        foreach (var adjacent in board.GetAdjacents(color == -1))
         {
             value = Math.Max(value, -1 * Apply(adjacent, depth + 1, color * -1, -1 * beta, -1 * alpha));
             
@@ -32,7 +32,7 @@ public class NegaMaxAlphaBetaPruning : INegaMax
         var bestScore = Int32.MinValue;
         foreach (var adj in adjacents)
         {
-            var adjScore = -1*Apply(adj, 1, -1,int.MinValue, int.MaxValue);
+            var adjScore = -1*Apply(adj, 1, 1,int.MinValue, int.MaxValue);
             if (bestScore < adjScore)
             {
                 bestScore = adjScore;
