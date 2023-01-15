@@ -16,7 +16,8 @@ public class TicTacToeGame
     public void Play()
     {
         Console.WriteLine(_field);
-        while (!_field.GameFinished(out Cell winner))
+        Cell winner = Cell.Empty;
+        while (!_field.GameFinished(out winner))
         {
             if (_playerTurn)
             {
@@ -31,6 +32,8 @@ public class TicTacToeGame
             Console.Clear();
             Console.WriteLine(_field);
         }
+
+        Console.WriteLine($"Winner is {winner}");
     }
 
     private void ComputerMove()
@@ -47,7 +50,7 @@ public class TicTacToeGame
             Console.Write("I: ");
             i = InputValidate();
             
-            Console.WriteLine("J: ");
+            Console.Write("\nJ: ");
             j = InputValidate();
         } while (_field[i, j] != Cell.Empty);
         
